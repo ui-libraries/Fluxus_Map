@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>FLUXUS EVENT MAP</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- INCLUDES -->
+      <!-- include leaflet / slider css, js local files -->
+      <script src="public/leaflet-0.7.3/leaflet.js"></script>
+      <link rel="stylesheet" href="public/leaflet-0.7.3/leaflet.css"/>
+      <script src="public/leafletSlider-1.0.2/leaflet.SliderControl.min.js"></script>
+      <!-- include a pretty little stamenizer -->
+      <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+      <!-- include fuse first, then the leaflet plugins that use fuse searching -->
+      <script src="public/fuse-1.2.1/fuse.min.js"></script>
+      <script src="public/leafletFuseSearch-noVersion/leafletfuse.js"></script>
+      <link rel="stylesheet" href="public/leafletFuseSearch-noVersion/leafletfuse.css" type="text/css"/>
+      <!-- jquery scripts and css -->
+      <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+      <script src="public/jquery-ui.js"></script>
+      <link rel="stylesheet" href="css/jquery-ui.css" type="text/css">
+      <!-- Include this library for mobile touch support (not tested) -->
+      <script src="public/jqueryUiTouchPunch-0.2.2/jquery.ui.touch-punch.min.js"></script>
+      <!-- include json data points -->
+      <script src="data3.js"></script>
+  </head>
+
+
+  <body>
+    <h2><img src="fluxlogo3.jpg" alt="Fluxus" height="50" width="350"> <i>1958 - 1978</i></h2>
+    <!-- provide the map with a div to live inside -->
+    <div id="map" style="width: 100%; height: 800px"></div>
+
+    <script>
+      // set up with openstreetmaps
+	  
+	  	  var myIcon = L.icon({
+    iconUrl: 'my-icon.png',
+    iconRetinaUrl: 'my-icon@2x.png',
+    iconSize: [1, 1],
+    iconAnchor: [1, 1],
+    popupAnchor: [-1, -1]
+});
+	  
+	  
+      var map = L.map('map').setView(new L.LatLng(20, -0), 3);
+      // grabbing http://maps.stamen.com/, choose from terrain, toner, etc
+      var stamenLayer = new L.StamenTileLayer('toner');
+	  map.options.maxZoom = 5;
+	  map.options.minZoom = 2;
+      map.addLayer(stamenLayer);
+
+      // original open street maps tiles, remove above few lines and uncomment these
+      /*L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);*/
+
+      // onEachFeature generate a popup for each location
+      // those params are coming automatically from the geoJson method
+      var onEachFeature = function(feature, layer) {
+        if (feature.properties) {
+          var prop = feature.properties;
+          // make a cool little html popup with properties
+            var popup = '<h3>'+prop['EVENT']+'<br><i>'+prop['CITY']+'</i></h3>'+'Artists: '+prop['ARTISTS']+'<br>'+prop['NOTES']+'<strong>'+prop['time']+' to '+prop['ENDATESTRI']+'</strong>';
+            // add known info about event to the description
+          
+          // you must create a layer property on each feature or else
+          // the search results won't know where the item is on the map / layer
+          feature.layer = layer;
+          layer.bindPopup(popup);
+        }
+      }; // end onEachFeature
+
+      // used by the generic "all locations" layer
+      var blueCircleMarkers = {
+        radius: 6,
+        fillColor: "#00AEEF",
+        color: "#3978BF",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.5
+      };
+
+      // used by the timesliding layer
+      var orangeCircleMarkers = {
+        radius: 6,
+        fillColor: "#ED1C24",
+        color: "#ED1C24",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.7
+      };
+
+      // used by the searching layer
+      var greenCircleMarkers = {
+        radius: 6,
+        fillColor: "#00A651",
+        color: "#286933",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.7
+      };
+
+      // generate a layer of markers for all the locations
+      L.geoJson(fluxGeoJson, {
+        // add popups
+        onEachFeature: onEachFeature,
+        pointToLayer: function(feature, latlng) {
+          return L.circleMarker(latlng, blueCircleMarkers);
+        }
+      }).addTo(map);
+
+      // now make a timeline layer that the slider can manipulate
+      var timelineLayer = L.geoJson(fluxGeoJson, {
+        onEachFeature: onEachFeature,
+        pointToLayer: function(feature, latlng) {
+          return L.circleMarker(latlng, orangeCircleMarkers);
+        }
+      });
+
+      // make a search layer
+      // now make a timeline layer that the slider can manipulate
+      var searchLayer = L.geoJson(fluxGeoJson, {
+        onEachFeature: onEachFeature,
+        pointToLayer: function(feature, latlng) {
+          return L.circleMarker(latlng, greenCircleMarkers);
+        }
+      });
+      // searchLayer.addTo(map);
+
+
+      // create the slider
+      var sliderControl = L.control.sliderControl({
+          position: "topright",
+          layer: timelineLayer,
+          range: true, // gives it a bottom and a top slider
+		  alwaysShowDate: true
+      });
+
+      map.addControl(sliderControl);
+      sliderControl.startSlider(); // initialize
+
+      // Add fuse search control
+      var searchOptions = {
+        position: 'topleft',
+        title: 'Search',
+        placeholder: 'Example: Andersen',
+        maxResultLength: 10,
+        caseSensitive: false,
+        showInvisibleFeatures: true,
+        layerToToggle: searchLayer,
+        threshold: 0.8, // default is .5, will match non-perfect results
+        showResultFct: function(feature, container) {
+          props = feature.properties;
+          var name = L.DomUtil.create('b', null, container);
+          name.innerHTML = props.EVENT;
+
+          container.appendChild(L.DomUtil.create('br', null, container));
+
+          var cat = props.ARTISTS ? props.ARTISTS : props.time,
+              info = cat;
+          container.appendChild(document.createTextNode(info));
+        }
+      };
+      var searchControl = L.control.fuseSearch(searchOptions);
+      map.addControl(searchControl);
+      searchControl.indexFeatures(fluxGeoJson, ['ARTISTS']);
+
+      displayFeatures(fluxGeoJson, searchLayer);
+
+
+      function displayFeatures(features, layer) {
+        var popup = L.DomUtil.create('div', 'tiny-popup', map.getContainer());
+        for (var id in features) {
+          var feat = features[id];
+          var cat = feat.properties.categorie;
+          var site = L.geoJson(feat, {
+            pointToLayer: function(feature, latLng) {
+              var marker = L.marker(latLng, {
+			    icon: myIcon,
+                keyboard: false,
+                riseOnHover: true
+              });
+              if (! L.touch) {
+                marker.on('mouseover', function(position) {
+                  // TODO can put text in here when hovering search
+                  // popup.innerHTML = 'Testing';
+                  // L.DomUtil.setPosition(popup, pos);
+                  // L.DomUtil.addClass(popup, 'visible');
+                }).on('mouseout', function(position) {
+                  L.DomUtil.removeClass(popup, 'visible');
+                });
+              }
+              return marker;
+            },
+            onEachFeature: onEachFeature
+          });
+          if (layer !== undefined) {
+              layer.addLayer(site);
+          }
+        }
+        return layer;
+      };
+
+    </script>
+  </body>
+</html>
