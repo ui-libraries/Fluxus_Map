@@ -10,13 +10,13 @@
       <link rel="stylesheet" href="public/leaflet-0.7.3/leaflet.css"/>
       <script src="public/leafletSlider-1.0.2/leaflet.SliderControl.min.js"></script>
       <!-- include a pretty little stamenizer -->
-      <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+      <script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js"></script>
       <!-- include fuse first, then the leaflet plugins that use fuse searching -->
       <script src="public/fuse-1.2.1/fuse.min.js"></script>
       <script src="public/leafletFuseSearch-noVersion/leafletfuse.js"></script>
       <link rel="stylesheet" href="public/leafletFuseSearch-noVersion/leafletfuse.css" type="text/css"/>
       <!-- jquery scripts and css -->
-      <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+      <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
       <script src="public/jquery-ui.js"></script>
       <link rel="stylesheet" href="css/jquery-ui.css" type="text/css">
       <!-- Include this library for mobile touch support (not tested) -->
@@ -33,7 +33,7 @@
 
     <script>
       // set up with openstreetmaps
-	  
+
 	  	  var myIcon = L.icon({
     iconUrl: 'my-icon.png',
     iconRetinaUrl: 'my-icon@2x.png',
@@ -41,8 +41,8 @@
     iconAnchor: [1, 1],
     popupAnchor: [-1, -1]
 });
-	  
-	  
+
+
       var map = L.map('map').setView(new L.LatLng(20, -0), 3);
       // grabbing http://maps.stamen.com/, choose from terrain, toner, etc
       var stamenLayer = new L.StamenTileLayer('toner');
@@ -63,7 +63,7 @@
           // make a cool little html popup with properties
             var popup = '<h3>'+prop['EVENT']+'<br><i>'+prop['CITY']+'</i></h3>'+'Artists: '+prop['ARTISTS']+'<br>'+prop['NOTES']+'<strong>'+prop['time']+' to '+prop['ENDATESTRI']+'</strong>';
             // add known info about event to the description
-          
+
           // you must create a layer property on each feature or else
           // the search results won't know where the item is on the map / layer
           feature.layer = layer;
